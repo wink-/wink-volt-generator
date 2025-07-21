@@ -1,0 +1,360 @@
+<?php
+
+use function Livewire\Volt\{state, computed, on};
+use {{ model_class }};
+
+state([{{ state_variables }}]);
+
+$performSearch = function () {
+    $this->loading = true;
+    
+    $query = {{ model_class }}::query();
+    
+    {{ search_logic }}
+    
+    $this->results = $query->paginate(10);
+    $this->loading = false;
+    
+    // Emit event with results for parent components
+    $this->dispatch('search-results-updated', [
+        'results' => $this->results->items(),
+        'total' => $this->results->total(),
+        'search' => $this->search,
+        'filters' => array_filter($this->filters)
+    ]);
+};
+
+$clearSearch = function () {
+    $this->reset({{ reset_method }});
+    $this->performSearch();
+};
+
+$clearFilter = function ($filterKey) {
+    if (str_contains($filterKey, '_from') || str_contains($filterKey, '_to')) {
+        $this->filters[$filterKey] = '';
+    } else {
+        $this->filters[$filterKey] = '';
+    }
+    $this->performSearch();
+};
+
+$toggleFilters = function () {
+    $this->showFilters = !$this->showFilters;
+};
+
+// Auto-search when component mounts
+$this->performSearch();
+
+// Watch for changes and trigger search
+$searchUpdated = function () {
+    $this->performSearch();
+};
+
+$filtersUpdated = function () {
+    $this->performSearch();
+};
+
+?>
+
+<div 
+    x-data="{ 
+        showMobileFilters: false,
+        activeFilters: @entangle('filters').live,
+        getActiveFilterCount() {
+            return Object.values(this.activeFilters).filter(value => value && value !== '').length;
+        }
+    }"
+    class="w-full"
+>
+    <!-- Search Header -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-lg mb-6">
+        <div class="p-6">
+            <!-- Main Search Bar -->
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input 
+                            wire:model.live.debounce.300ms="search"
+                            type="text" 
+                            placeholder="Search {{ plural_model }}..."
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                        
+                        <!-- Clear Search Button -->
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            @if($search)
+                                <button 
+                                    wire:click="clearSearch"
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                >
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Toggle & Actions -->
+                <div class="flex items-center space-x-3">
+                    <!-- Results Count -->
+                    <div class="text-sm text-gray-600">
+                        <span wire:loading.remove>
+                            @if($results && $results->total() > 0)
+                                <span class="font-medium">{{ $results->total() }}</span> result{{ $results->total() == 1 ? '' : 's' }}
+                            @elseif($search || array_filter($filters))
+                                No results found
+                            @endif
+                        </span>
+                        <span wire:loading class="flex items-center">
+                            <svg class="animate-spin h-4 w-4 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Searching...
+                        </span>
+                    </div>
+                    
+                    <!-- Mobile Filter Toggle -->
+                    <button 
+                        @click="showMobileFilters = !showMobileFilters"
+                        wire:click="toggleFilters"
+                        class="lg:hidden inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filters
+                        <span 
+                            x-show="getActiveFilterCount() > 0" 
+                            x-text="getActiveFilterCount()"
+                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                        ></span>
+                    </button>
+                    
+                    <!-- Desktop Filter Toggle -->
+                    <button 
+                        wire:click="toggleFilters"
+                        class="hidden lg:inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filters
+                        <span 
+                            x-show="getActiveFilterCount() > 0" 
+                            x-text="getActiveFilterCount()"
+                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                        ></span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Active Filter Chips -->
+            <div class="mt-4" x-show="getActiveFilterCount() > 0">
+                <div class="flex flex-wrap gap-2">
+                    <!-- Search Chip -->
+                    @if($search)
+                        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                            <span class="mr-2">Search: "{{ $search }}"</span>
+                            <button 
+                                wire:click="$set('search', '')"
+                                class="text-blue-600 hover:text-blue-800 focus:outline-none"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    @endif
+                    
+                    <!-- Filter Chips -->
+                    @foreach($filters as $key => $value)
+                        @if($value && $value !== '')
+                            <div class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+                                <span class="mr-2">{{ Str::title(str_replace(['_from', '_to', '_'], [' From', ' To', ' '], $key)) }}: {{ $value }}</span>
+                                <button 
+                                    wire:click="clearFilter('{{ $key }}')"
+                                    class="text-gray-600 hover:text-gray-800 focus:outline-none"
+                                >
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        @endif
+                    @endforeach
+                    
+                    <!-- Clear All Button -->
+                    @if($search || array_filter($filters))
+                        <button 
+                            wire:click="clearSearch"
+                            class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Clear All
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters Panel -->
+        <div 
+            class="border-t border-gray-200"
+            x-show="showMobileFilters || @js($showFilters)"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 transform -translate-y-2"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-2"
+            style="display: {{ $showFilters ? 'block' : 'none' }}"
+        >
+            <div class="p-6 bg-gray-50">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {{ filter_inputs }}
+                </div>
+                
+                @if(!empty(array_filter($filters)))
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <button 
+                            wire:click="clearSearch"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset Filters
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results Section -->
+    <div class="bg-white shadow-sm border border-gray-200 rounded-lg">
+        <!-- Results Header -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Search Results</h3>
+                @if($results && $results->total() > 0)
+                    <div class="text-sm text-gray-500">
+                        Showing {{ $results->firstItem() }}-{{ $results->lastItem() }} of {{ $results->total() }} results
+                    </div>
+                @endif
+            </div>
+        </div>
+        
+        <!-- Results Content -->
+        <div class="p-6">
+            <div wire:loading class="flex items-center justify-center py-8">
+                <div class="flex items-center">
+                    <svg class="animate-spin h-8 w-8 text-indigo-600 mr-3" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-lg text-gray-600">Loading results...</span>
+                </div>
+            </div>
+            
+            <div wire:loading.remove>
+                @if($results && $results->count() > 0)
+                    <!-- Results List -->
+                    <div class="space-y-4">
+                        @foreach($results as ${{ model_variable }})
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <!-- Customize this section based on your model fields -->
+                                        <h4 class="text-lg font-medium text-gray-900">
+                                            <!-- Display primary field (name, title, etc.) -->
+                                            {{ ${{ model_variable }}->name ?? ${{ model_variable }}->title ?? "{{ model_name }} #" . ${{ model_variable }}->id }}
+                                        </h4>
+                                        
+                                        <!-- Display additional fields -->
+                                        <div class="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+                                            @if(isset(${{ model_variable }}->email))
+                                                <div>
+                                                    <span class="font-medium">Email:</span> {{ ${{ model_variable }}->email }}
+                                                </div>
+                                            @endif
+                                            
+                                            @if(isset(${{ model_variable }}->status))
+                                                <div>
+                                                    <span class="font-medium">Status:</span> 
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                        {{ ${{ model_variable }}->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                                        {{ Str::title(${{ model_variable }}->status) }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            
+                                            @if(isset(${{ model_variable }}->created_at))
+                                                <div>
+                                                    <span class="font-medium">Created:</span> {{ ${{ model_variable }}->created_at->format('M j, Y') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="ml-4 flex items-center space-x-2">
+                                        <a 
+                                            href="#" 
+                                            class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
+                                            View
+                                        </a>
+                                        <a 
+                                            href="#" 
+                                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
+                                            Edit
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="mt-6">
+                        {{ $results->links() }}
+                    </div>
+                @else
+                    <!-- Empty State -->
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <h3 class="mt-2 text-lg font-medium text-gray-900">No results found</h3>
+                        <p class="mt-1 text-gray-500">
+                            @if($search || array_filter($filters))
+                                Try adjusting your search terms or filters to find what you're looking for.
+                            @else
+                                No {{ plural_model }} available to display.
+                            @endif
+                        </p>
+                        @if($search || array_filter($filters))
+                            <div class="mt-6">
+                                <button 
+                                    wire:click="clearSearch"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                    Clear search and filters
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>

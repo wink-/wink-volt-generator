@@ -114,4 +114,122 @@ return [
             'website' => 'url',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Card Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration options for Card component generation.
+    |
+    */
+    'card' => [
+        /*
+        | Columns to exclude from generated cards. These are typically
+        | internal fields that shouldn't be displayed to users.
+        */
+        'exclude_columns' => [
+            'id',
+            'password',
+            'remember_token',
+            'email_verified_at',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ],
+
+        /*
+        | Default layout when not specified in the command.
+        */
+        'default_layout' => 'grid',
+
+        /*
+        | Default number of columns for grid layout.
+        */
+        'default_columns' => 3,
+
+        /*
+        | Default number of items per page for pagination.
+        */
+        'per_page' => 12,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Modal Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration options for Modal component generation.
+    |
+    */
+    'modal' => [
+        /*
+        | Columns to exclude from generated modals. These are typically
+        | internal fields that shouldn't be displayed or edited.
+        */
+        'exclude_columns' => [
+            'id',
+            'password',
+            'remember_token',
+            'email_verified_at',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ],
+
+        /*
+        | Default modal type when not specified in the command.
+        */
+        'default_type' => 'crud',
+
+        /*
+        | Modal size configurations for different types.
+        */
+        'sizes' => [
+            'confirm' => 'sm',
+            'view' => 'lg',
+            'crud' => 'md',
+            'custom' => 'md',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration options for Search/Filter component generation.
+    |
+    */
+    'search' => [
+        /*
+        | Columns to exclude from search/filter generation. These are typically
+        | internal fields that shouldn't be searchable or filterable.
+        */
+        'exclude_columns' => [
+            'password',
+            'remember_token',
+            'email_verified_at',
+        ],
+
+        /*
+        | Default search debounce delay in milliseconds.
+        */
+        'debounce_delay' => 300,
+
+        /*
+        | Default number of results per page.
+        */
+        'per_page' => 10,
+
+        /*
+        | Fields that should default to being searchable if not specified.
+        */
+        'default_searchable_fields' => [
+            'name',
+            'title',
+            'description',
+            'email',
+        ],
+    ],
 ];

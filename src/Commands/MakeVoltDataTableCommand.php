@@ -50,6 +50,12 @@ class MakeVoltDataTableCommand extends Command
             return $model;
         }
 
+        // Check test models first (for testing)
+        $testModelClass = "Wink\\VoltGenerator\\Tests\\Models\\{$model}";
+        if (class_exists($testModelClass)) {
+            return $testModelClass;
+        }
+
         $modelClass = "App\\Models\\{$model}";
         if (class_exists($modelClass)) {
             return $modelClass;

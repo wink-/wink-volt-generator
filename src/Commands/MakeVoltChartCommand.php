@@ -24,7 +24,7 @@ class MakeVoltChartCommand extends Command
         $modelClass = $this->getModelClass($model);
 
         if (!class_exists($modelClass)) {
-            $this->error("Model {$modelClass} does not exist.");
+            $this->error("Model App\\Models\\{$model} does not exist.");
             return 1;
         }
 
@@ -45,7 +45,8 @@ class MakeVoltChartCommand extends Command
         $this->ensureDirectoryExists(dirname($componentPath));
         File::put($componentPath, $componentContent);
 
-        $this->info("Volt component [{$componentPath}] created successfully.");
+        $relativePath = str_replace(base_path() . '/', '', $componentPath);
+        $this->info("Volt component [{$relativePath}] created successfully.");
         $this->warn("Don't forget to install Chart.js: npm install chart.js");
 
         return 0;

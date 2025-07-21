@@ -38,7 +38,8 @@ class MakeVoltFormCommand extends Command
         $this->ensureDirectoryExists(dirname($componentPath));
         File::put($componentPath, $componentContent);
 
-        $this->info("Volt component [{$componentPath}] created successfully.");
+        $relativePath = str_replace(base_path() . '/', '', $componentPath);
+        $this->info("Volt component [{$relativePath}] created successfully.");
 
         return 0;
     }
@@ -107,6 +108,7 @@ class MakeVoltFormCommand extends Command
             '{{ validation_rules }}',
             '{{ submit_method }}',
             '{{ mount_method }}',
+            '{{ mount_method_import }}',
             '{{ state_variables }}',
         ], [
             "App\\Livewire\\{$pluralModel}",
@@ -120,6 +122,7 @@ class MakeVoltFormCommand extends Command
             $validationRules,
             $submitMethod,
             $mountMethod,
+            !empty($mountMethod) ? ', mount' : '',
             $stateVariables,
         ], $stub);
     }

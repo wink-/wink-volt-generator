@@ -26,7 +26,7 @@ class MakeVoltModalCommandTest extends TestCase
     public function it_can_generate_crud_modal_component()
     {
         $this->artisan('make:volt-modal', ['model' => 'User', '--type' => 'crud'])
-             ->expectsOutput('Volt modal component [' . base_path('app/Livewire/Users/CrudModal.php') . '] created successfully.')
+             ->expectsOutput('Volt modal component [app/Livewire/Users/CrudModal.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/CrudModal.php')));
@@ -45,7 +45,7 @@ class MakeVoltModalCommandTest extends TestCase
     public function it_can_generate_confirm_modal_component()
     {
         $this->artisan('make:volt-modal', ['model' => 'User', '--type' => 'confirm'])
-             ->expectsOutput('Volt modal component [' . base_path('app/Livewire/Users/ConfirmModal.php') . '] created successfully.')
+             ->expectsOutput('Volt modal component [app/Livewire/Users/ConfirmModal.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/ConfirmModal.php')));
@@ -63,7 +63,7 @@ class MakeVoltModalCommandTest extends TestCase
     public function it_can_generate_view_modal_component()
     {
         $this->artisan('make:volt-modal', ['model' => 'User', '--type' => 'view'])
-             ->expectsOutput('Volt modal component [' . base_path('app/Livewire/Users/ViewModal.php') . '] created successfully.')
+             ->expectsOutput('Volt modal component [app/Livewire/Users/ViewModal.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/ViewModal.php')));
@@ -80,7 +80,7 @@ class MakeVoltModalCommandTest extends TestCase
     public function it_can_generate_custom_modal_component()
     {
         $this->artisan('make:volt-modal', ['model' => 'User', '--type' => 'custom'])
-             ->expectsOutput('Volt modal component [' . base_path('app/Livewire/Users/CustomModal.php') . '] created successfully.')
+             ->expectsOutput('Volt modal component [app/Livewire/Users/CustomModal.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/CustomModal.php')));
@@ -97,7 +97,7 @@ class MakeVoltModalCommandTest extends TestCase
     public function it_defaults_to_crud_type_when_no_type_specified()
     {
         $this->artisan('make:volt-modal', ['model' => 'User'])
-             ->expectsOutput('Volt modal component [' . base_path('app/Livewire/Users/CrudModal.php') . '] created successfully.')
+             ->expectsOutput('Volt modal component [app/Livewire/Users/CrudModal.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/CrudModal.php')));
@@ -107,7 +107,7 @@ class MakeVoltModalCommandTest extends TestCase
     public function it_can_generate_modal_for_product_model()
     {
         $this->artisan('make:volt-modal', ['model' => 'Product', '--type' => 'crud'])
-             ->expectsOutput('Volt modal component [' . base_path('app/Livewire/Products/CrudModal.php') . '] created successfully.')
+             ->expectsOutput('Volt modal component [app/Livewire/Products/CrudModal.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Products/CrudModal.php')));

@@ -37,7 +37,8 @@ class MakeVoltModalCommand extends Command
         $this->ensureDirectoryExists(dirname($componentPath));
         File::put($componentPath, $componentContent);
 
-        $this->info("Volt modal component [{$componentPath}] created successfully.");
+        $relativePath = str_replace(base_path() . '/', '', $componentPath);
+        $this->info("Volt modal component [{$relativePath}] created successfully.");
 
         return 0;
     }
@@ -108,6 +109,7 @@ class MakeVoltModalCommand extends Command
             '{{ state_variables }}',
             '{{ validation_rules }}',
             '{{ mount_method }}',
+            '{{ mount_method_import }}',
             '{{ modal_title }}',
             '{{ modal_size }}',
         ], [
@@ -123,6 +125,7 @@ class MakeVoltModalCommand extends Command
             $stateVariables,
             $validationRules,
             $mountMethod,
+            !empty($mountMethod) ? ', mount' : '',
             $this->getModalTitle($model, $type),
             $this->getModalSize($type),
         ], $stub);

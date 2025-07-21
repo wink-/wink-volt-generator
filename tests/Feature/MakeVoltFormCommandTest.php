@@ -26,7 +26,7 @@ class MakeVoltFormCommandTest extends TestCase
     public function it_can_generate_create_form_component()
     {
         $this->artisan('make:volt-form', ['model' => 'User', '--action' => 'create'])
-             ->expectsOutput('Volt component [' . base_path('app/Livewire/Users/Create.php') . '] created successfully.')
+             ->expectsOutput('Volt component [app/Livewire/Users/Create.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/Create.php')));
@@ -44,7 +44,7 @@ class MakeVoltFormCommandTest extends TestCase
     public function it_can_generate_edit_form_component()
     {
         $this->artisan('make:volt-form', ['model' => 'User', '--action' => 'edit'])
-             ->expectsOutput('Volt component [' . base_path('app/Livewire/Users/Edit.php') . '] created successfully.')
+             ->expectsOutput('Volt component [app/Livewire/Users/Edit.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/Edit.php')));
@@ -60,7 +60,7 @@ class MakeVoltFormCommandTest extends TestCase
     public function it_can_generate_both_form_component()
     {
         $this->artisan('make:volt-form', ['model' => 'User', '--action' => 'both'])
-             ->expectsOutput('Volt component [' . base_path('app/Livewire/Users/Form.php') . '] created successfully.')
+             ->expectsOutput('Volt component [app/Livewire/Users/Form.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/Form.php')));
@@ -76,7 +76,7 @@ class MakeVoltFormCommandTest extends TestCase
     public function it_defaults_to_create_action_when_no_action_specified()
     {
         $this->artisan('make:volt-form', ['model' => 'User'])
-             ->expectsOutput('Volt component [' . base_path('app/Livewire/Users/Create.php') . '] created successfully.')
+             ->expectsOutput('Volt component [app/Livewire/Users/Create.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Users/Create.php')));
@@ -86,7 +86,7 @@ class MakeVoltFormCommandTest extends TestCase
     public function it_can_generate_form_for_product_model()
     {
         $this->artisan('make:volt-form', ['model' => 'Product', '--action' => 'create'])
-             ->expectsOutput('Volt component [' . base_path('app/Livewire/Products/Create.php') . '] created successfully.')
+             ->expectsOutput('Volt component [app/Livewire/Products/Create.php] created successfully.')
              ->assertExitCode(0);
 
         $this->assertTrue(File::exists(base_path('app/Livewire/Products/Create.php')));

@@ -11,18 +11,13 @@ class MakeVoltSearchCommandTest extends TestCase
     {
         parent::setUp();
         
-        // Clean up before each test
-        if (File::exists(base_path('app/Livewire'))) {
-            File::deleteDirectory(base_path('app/Livewire'));
-        }
+        // Clean up any test files
+        $this->cleanupTestFiles();
     }
     
     protected function tearDown(): void
     {
-        // Clean up after each test
-        if (File::exists(base_path('app/Livewire'))) {
-            File::deleteDirectory(base_path('app/Livewire'));
-        }
+        $this->cleanupTestFiles();
         
         parent::tearDown();
     }
@@ -30,9 +25,9 @@ class MakeVoltSearchCommandTest extends TestCase
     /** @test */
     public function it_can_generate_a_search_component_for_user_model()
     {
-        $result = $this->artisan('make:volt-search', ['model' => 'User']);
-        
-        $result->assertExitCode(0);
+        $this->artisan('make:volt-search', ['model' => 'User'])
+             ->expectsOutput('Volt search component [app/Livewire/Users/Search.php] created successfully.')
+             ->assertExitCode(0);
 
         $componentPath = base_path('app/Livewire/Users/Search.php');
         $this->assertTrue(File::exists($componentPath));
@@ -50,13 +45,13 @@ class MakeVoltSearchCommandTest extends TestCase
     /** @test */
     public function it_can_generate_a_search_component_with_custom_fields()
     {
-        $result = $this->artisan('make:volt-search', [
+        $this->artisan('make:volt-search', [
             'model' => 'User',
             '--fields' => 'name,email',
             '--filters' => 'email_verified_at'
-        ]);
-        
-        $result->assertExitCode(0);
+        ])
+        ->expectsOutput('Volt search component [app/Livewire/Users/Search.php] created successfully.')
+        ->assertExitCode(0);
 
         $componentPath = base_path('app/Livewire/Users/Search.php');
         $this->assertTrue(File::exists($componentPath));
@@ -80,8 +75,9 @@ class MakeVoltSearchCommandTest extends TestCase
     /** @test */
     public function it_can_generate_search_component_for_product_model()
     {
-        $result = $this->artisan('make:volt-search', ['model' => 'Product']);
-        $result->assertExitCode(0);
+        $this->artisan('make:volt-search', ['model' => 'Product'])
+             ->expectsOutput('Volt search component [app/Livewire/Products/Search.php] created successfully.')
+             ->assertExitCode(0);
 
         $componentPath = base_path('app/Livewire/Products/Search.php');
         $this->assertTrue(File::exists($componentPath));
@@ -95,5 +91,20 @@ class MakeVoltSearchCommandTest extends TestCase
         // Should auto-detect searchable fields (name, description)
         $this->assertStringContainsString("->orWhere('name', 'like'", $content);
         $this->assertStringContainsString("->orWhere('description', 'like'", $content);
+    }
+
+    protected function cleanupTestFiles()
+    {
+        $paths = [
+            base_path('app/Livewire/Users'),
+            base_path('app/Livewire/Products'),
+            base_path('app/Livewire/NonExistentModels'),
+        ];
+
+        foreach ($paths as $path) {
+            if (File::isDirectory($path)) {
+                File::deleteDirectory($path);
+            }
+        }
     }
 }

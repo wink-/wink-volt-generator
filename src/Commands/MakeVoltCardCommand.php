@@ -47,7 +47,8 @@ class MakeVoltCardCommand extends Command
         $this->ensureDirectoryExists(dirname($componentPath));
         File::put($componentPath, $componentContent);
 
-        $this->info("Volt card component [{$componentPath}] created successfully.");
+        $relativePath = str_replace(base_path() . '/', '', $componentPath);
+        $this->info("Volt card component [{$relativePath}] created successfully.");
         $this->info("Layout: {$layout}");
         if ($layout === 'grid') {
             $this->info("Grid columns: {$columns}");

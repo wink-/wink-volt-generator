@@ -32,7 +32,8 @@ class MakeVoltSearchCommand extends Command
         $this->ensureDirectoryExists(dirname($componentPath));
         File::put($componentPath, $componentContent);
 
-        $this->info("Volt search component [{$componentPath}] created successfully.");
+        $relativePath = str_replace(base_path() . '/', '', $componentPath);
+        $this->info("Volt search component [{$relativePath}] created successfully.");
 
         return 0;
     }
@@ -242,11 +243,23 @@ class MakeVoltSearchCommand extends Command
             return '';
         }
 
-        $table = $modelInstance->getTable();
         $inputs = [];
 
         foreach ($filterableFields as $field) {
-            $columnType = Schema::getColumnType($table, $field);
+            $columnType = 'string'; // Default fallback
+            
+            try {
+                $table = $modelInstance->getTable();
+                $columnType = Schema::getColumnType($table, $field);
+            } catch (\Exception $e) {
+                // If schema introspection fails, use field name patterns to guess type
+                $columnType = match (true) {
+                    str_contains($field, 'date') || str_contains($field, '_at') => 'datetime',
+                    str_contains($field, 'is_') || str_contains($field, 'active') || str_contains($field, 'enabled') => 'boolean',
+                    default => 'string',
+                };
+            }
+            
             $label = Str::title(str_replace('_', ' ', $field));
             
             $input = match (true) {

@@ -1,6 +1,6 @@
 <?php
 
-use function Livewire\Volt\{state, rules, {{ mount_method ? 'mount, ' : '' }}computed};
+use function Livewire\Volt\{state, rules{{ mount_method_import }}, computed};
 use {{ model_class }};
 
 state([{{ state_variables }}]);

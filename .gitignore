@@ -1,0 +1,52 @@
+# Dependencies
+/vendor/
+node_modules/
+
+# Composer
+composer.lock
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing and Coverage
+/coverage/
+.phpunit.result.cache
+.phpunit.cache
+/build/
+/.phpunit.cache
+
+# Environment and config
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache directories
+/.cache
+/tmp
+
+# Laravel specific (for testing environment)
+storage/
+bootstrap/cache/
+.phpunit.result.cache
+
+# Package specific
+*.prd

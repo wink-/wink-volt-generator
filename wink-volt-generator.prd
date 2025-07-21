@@ -1,0 +1,116 @@
+### **Product Requirements Document: Wink Volt Generator**
+
+**1. Introduction & Vision**
+
+This document outlines the requirements for a new Laravel package, `wink-volt-generator`.
+
+*   **Problem:** Developers using Laravel's TALL stack (Tailwind, Alpine, Livewire, Laravel), and specifically the new Volt functional API, frequently need to create data tables and charts to display and visualize data from Eloquent models. This process involves creating Livewire/Volt components, writing the logic to fetch and prepare data, and scaffolding the view structure (HTML tables or JavaScript chart initializations). This is a repetitive and time-consuming boilerplate task.
+*   **Vision:** To be the go-to toolkit for accelerating TALL stack development by providing a simple, fast, and customizable way to generate fully functional, data-driven UI components directly from the command line.
+*   **Goal:** A developer should be able to run a single Artisan command to generate a complete, working DataTable or Chart component for any given Eloquent model, which they can then immediately use and customize.
+
+**2. Target Audience**
+
+*   Laravel developers.
+*   Developers using the TALL Stack (Tailwind, Alpine, Livewire, Laravel).
+*   Developers who have adopted or are transitioning to Laravel Volt.
+
+**3. Core Features**
+
+The package will provide two primary Artisan commands for generating components.
+
+---
+
+**3.1. Feature: Volt DataTable Generation**
+
+*   **Command Signature:** `php artisan make:volt-datatable {model}`
+*   **Argument:**
+    *   `{model}`: The name of the Eloquent model to generate the DataTable for (e.g., `User`, `Product`). The command must correctly resolve models within subdirectories (e.g., `Models/Cms/Post`).
+*   **Functionality:**
+    1.  Accepts a model name as input.
+    2.  Introspects the model's database table to determine its columns using `Schema::getColumnListing()`.
+    3.  Automatically excludes a configurable list of common, non-display columns (e.g., `id`, `password`, `remember_token`, timestamps).
+    4.  Generates a single-file Volt component containing both the PHP logic (data fetching) and the Blade view (HTML table).
+    5.  Places the generated file in a conventional location, such as `app/Livewire/Users/DataTable.php` (for a `User` model).
+
+---
+
+**3.2. Feature: Volt Chart Generation**
+
+*   **Command Signature:** `php artisan make:volt-chart {model}`
+*   **Argument:**
+    *   `{model}`: The name of the Eloquent model to source data from.
+*   **Options:**
+    *   `--type=<type>`: The type of chart to generate. Defaults to `bar`. Supported: `bar`, `line`, `pie`, `doughnut`.
+    *   `--dimension=<column>`: The column for the chart's labels (X-axis). Defaults to `created_at`.
+    *   `--metric=<aggregation>`: The calculation for the chart's data (Y-axis). Defaults to `count`. Supported: `count`, `sum`, `avg`.
+    *   `--metric-column=<column>`: The column to use for `sum` or `avg` aggregations. Required if `--metric` is not `count`.
+    *   `--time-unit=<unit>`: If the dimension is a date/time column, group data by this unit. Defaults to `day`. Supported: `day`, `month`, `year`.
+*   **Functionality:**
+    1.  Builds and executes a database query based on the specified options to get aggregated data.
+    2.  Generates a single-file Volt component.
+    3.  The PHP section of the component contains the query logic and assigns the results to public properties (`$labels`, `$data`).
+    4.  The Blade section contains a `<canvas>` element and an Alpine.js component that initializes a Chart.js instance using the data from the Volt component.
+*   **Dependency Note:** The generated component will require Chart.js. The user is responsible for installing it (`npm install chart.js`) and making it available to their frontend assets. The command's output will remind the user of this requirement.
+
+---
+
+**4. Customization & Configuration**
+
+To ensure maximum flexibility, the generator will be highly customizable.
+
+**4.1. Publishable Stubs**
+
+*   **Stubs:** The package will ship with default stub files (`volt-datatable.stub`, `volt-chart.stub`).
+*   **Publishing:** A developer can publish the stubs to their project's `/stubs` directory to take full control over the generated component's structure, styling, and logic.
+    `php artisan vendor:publish --tag="wink-volt-generator-stubs"`
+*   **Placeholders:** The stubs will use simple placeholders (e.g., `{{ model_name }}`, `{{ table_headers }}`, `{{ chart_type }}`, `{{ labels_json }}`) that the generator will replace with the appropriate content.
+
+**4.2. Publishable Configuration File**
+
+*   **Publishing:** A single configuration file can be published using:
+    `php artisan vendor:publish --tag="wink-volt-generator-config"`
+*   **Configuration Options (`config/wink-volt-generator.php`):**
+    *   `path`: The default path to generate components in (default: `app/Livewire`).
+    *   `datatable.exclude_columns`: An array of column names to always exclude from generated tables.
+    *   `datatable.base_view`: The base layout view the component should extend (e.g., `layouts.app`).
+    *   `chart.default_type`: The default chart type if not specified.
+    *   `chart.colors`: Default color schemes for generated charts.
+
+**5. User Experience / Usage Example**
+
+1.  **Installation:**
+    ```bash
+    composer require wink/volt-generator
+    ```
+2.  **(Optional) Frontend Setup for Charts:**
+    ```bash
+    npm install chart.js
+    # Add to resources/js/app.js:
+    # import Chart from 'chart.js/auto';
+    # window.Chart = Chart;
+    ```
+3.  **(Optional) Customization:**
+    ```bash
+    php artisan vendor:publish --tag="wink-volt-generator-config"
+    php artisan vendor:publish --tag="wink-volt-generator-stubs"
+    ```
+4.  **Generate a DataTable:**
+    ```bash
+    php artisan make:volt-datatable Product
+    ```
+    *Console Output:* `INFO  Volt component [app/Livewire/Products/DataTable.php] created successfully.`
+
+5.  **Generate a Chart:**
+    ```bash
+    php artisan make:volt-chart Order --type=line --metric=sum --metric-column=total_price --time-unit=month
+    ```
+    *Console Output:* `INFO  Volt component [app/Livewire/Orders/Chart.php] created successfully.`
+
+6.  **Usage in a Blade file:**
+    ```html
+    <!-- Display the products table -->
+    <livewire:products.data-table />
+
+    <!-- Display the orders chart -->
+    <livewire:orders.chart />
+    ```

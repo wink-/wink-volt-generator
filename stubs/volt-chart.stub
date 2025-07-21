@@ -1,0 +1,46 @@
+<?php
+
+use function Livewire\Volt\{state, mount};
+use {{ model_class }};
+
+state(['labels' => [], 'data' => []]);
+
+mount(function () {
+    {{ query_logic }}
+});
+
+?>
+
+<div x-data="{
+    chart: null,
+    init() {
+        const ctx = this.$refs.canvas.getContext('2d');
+        this.chart = new Chart(ctx, {
+            type: '{{ chart_type }}',
+            data: {
+                labels: @js($labels),
+                datasets: [{
+                    label: '{{ plural_model }}',
+                    data: @js($data),
+                    backgroundColor: {{ chart_colors }},
+                    borderColor: {{ chart_colors }},
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: '{{ plural_model }} Chart'
+                    }
+                }
+            }
+        });
+    }
+}" class="w-full">
+    <canvas x-ref="canvas"></canvas>
+</div>

@@ -1,0 +1,29 @@
+<?php
+
+use function Livewire\Volt\{state, mount};
+use {{ model_class }};
+
+state(['{{ model_variable }}' => collect()]);
+
+mount(function () {
+    $this->{{ model_variable }} = {{ model_class }}::all();
+});
+
+?>
+
+<div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+    <table class="min-w-full divide-y divide-gray-300">
+        <thead class="bg-gray-50">
+            <tr>
+                {{ table_headers }}
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+            @foreach(${{ model_variable }} as ${{ model_variable }})
+                <tr>
+                    {{ table_rows }}
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>

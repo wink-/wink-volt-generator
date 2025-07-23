@@ -7,11 +7,7 @@ state([{{ state_variables }}]);
 
 {{ mount_method }}
 
-@if(!empty('{{ validation_rules }}'))
-rules([
-{{ validation_rules }}
-]);
-@endif
+{{ validation_rules_block }}
 
 {{ modal_methods }}
 

@@ -84,22 +84,33 @@ class MakeVoltDataTableCommand extends Command
         $tableHeaders = $this->generateTableHeaders($columns);
         $tableRows = $this->generateTableRows($columns, $modelVariable);
 
+        $searchFields = $this->generateSearchFields($columns, $modelVariable);
+        $tableColspan = count($columns) + 1; // +1 for actions column
+
         return str_replace([
             '{{ namespace }}',
             '{{ class }}',
             '{{ model_class }}',
+            '{{ model_name }}',
             '{{ model_variable }}',
+            '{{ plural_model_variable }}',
             '{{ plural_model }}',
             '{{ table_headers }}',
             '{{ table_rows }}',
+            '{{ search_fields }}',
+            '{{ table_colspan }}',
         ], [
             "App\\Livewire\\{$pluralModel}",
             'DataTable',
             $modelClass,
+            $model,
             $modelVariable,
+            Str::camel($pluralModel),
             Str::lower($pluralModel),
             $tableHeaders,
             $tableRows,
+            $searchFields,
+            $tableColspan,
         ], $stub);
     }
 
@@ -131,6 +142,29 @@ class MakeVoltDataTableCommand extends Command
         }, $columns);
 
         return implode("\n                        ", $cells);
+    }
+
+    protected function generateSearchFields(array $columns, string $modelVariable): string
+    {
+        // Filter columns that are likely to be searchable (text-based)
+        $searchableColumns = array_filter($columns, function($column) {
+            return in_array($column, ['name', 'title', 'description', 'email']) || 
+                   str_contains($column, 'name') || 
+                   str_contains($column, 'title') ||
+                   str_contains($column, 'description');
+        });
+
+        if (empty($searchableColumns)) {
+            // Fallback to first text-like column
+            $searchableColumns = array_slice($columns, 0, 1);
+        }
+
+        $searchConditions = [];
+        foreach ($searchableColumns as $column) {
+            $searchConditions[] = "\$query->orWhere('{$column}', 'like', '%' . \$this->search . '%');";
+        }
+
+        return implode("\n        ", $searchConditions);
     }
 
     protected function ensureDirectoryExists(string $path): void

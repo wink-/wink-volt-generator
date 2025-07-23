@@ -90,7 +90,7 @@ class MakeVoltFormCommand extends Command
         $formFields = $this->generateFormFields($modelClass, $modelInstance);
         $validationRules = $this->generateValidationRules($modelClass, $modelInstance);
         $submitMethod = $this->generateSubmitMethod($modelClass, $action);
-        $mountMethod = $this->generateMountMethod($action);
+        $mountMethod = $this->generateMountMethod($action, $modelClass);
         $stateVariables = $this->generateStateVariables($modelInstance, $action);
 
         $pluralModel = Str::plural($model);
@@ -185,7 +185,7 @@ class MakeVoltFormCommand extends Command
             in_array($columnType, ['date']) => 'date',
             in_array($columnType, ['datetime', 'timestamp']) => 'datetime-local',
             in_array($columnType, ['time']) => 'time',
-            in_array($columnType, ['boolean']) => 'checkbox',
+            in_array($columnType, ['boolean', 'tinyint']) && (str_contains($column, 'is_') || str_contains($column, 'has_') || in_array($column, ['active', 'enabled', 'published'])) => 'checkbox',
             default => 'text',
         };
     }
@@ -222,6 +222,12 @@ class MakeVoltFormCommand extends Command
         </div>";
         }
 
+        // Add step attribute for decimal fields
+        $stepAttr = '';
+        if ($type === 'number' && (str_contains($field, 'price') || str_contains($field, 'amount') || str_contains($field, 'cost'))) {
+            $stepAttr = ' step="0.01"';
+        }
+
         return "        <div>
             <label for=\"{$field}\" class=\"block text-sm font-medium text-gray-700 mb-2\">{$label}</label>
             <input 
@@ -229,7 +235,7 @@ class MakeVoltFormCommand extends Command
                 type=\"{$type}\"
                 id=\"{$field}\"
                 class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500\"
-                placeholder=\"Enter {$label}\"
+                placeholder=\"Enter {$label}\"{$stepAttr}
             >
             @error('{$field}') <span class=\"text-red-500 text-xs mt-1\">{{ \$message }}</span> @enderror
         </div>";
@@ -329,24 +335,26 @@ class MakeVoltFormCommand extends Command
         }";
     }
 
-    protected function generateMountMethod(string $action): string
+    protected function generateMountMethod(string $action, string $modelClass = null): string
     {
         if ($action === 'create') {
             return '';
         }
         
+        $modelClassShort = $modelClass ? class_basename($modelClass) : '{model_class}';
+        
         if ($action === 'edit') {
-            return 'mount(function ({model_class} $model) {
-    $this->model = $model;
-    $this->form = $model->toArray();
-});';
+            return "mount(function ({$modelClassShort} \$model) {
+    \$this->model = \$model;
+    \$this->form = \$model->toArray();
+});";
         }
         
         // Both action
-        return 'mount(function ({model_class} $model = null) {
-    $this->model = $model;
-    $this->form = $model ? $model->toArray() : [];
-});';
+        return "mount(function ({$modelClassShort} \$model = null) {
+    \$this->model = \$model;
+    \$this->form = \$model ? \$model->toArray() : [];
+});";
     }
 
     protected function generateStateVariables(Model $modelInstance, string $action): string

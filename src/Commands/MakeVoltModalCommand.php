@@ -91,7 +91,7 @@ class MakeVoltModalCommand extends Command
         $modalMethods = $this->generateModalMethods($modelClass, $type);
         $stateVariables = $this->generateStateVariables($modelInstance, $type);
         $validationRules = $this->generateValidationRules($modelClass, $modelInstance, $type);
-        $mountMethod = $this->generateMountMethod($type);
+        $mountMethod = $this->generateMountMethod($type, $modelClass);
 
         $pluralModel = Str::plural($model);
         $modelVariable = Str::camel($model);
@@ -108,6 +108,7 @@ class MakeVoltModalCommand extends Command
             '{{ modal_methods }}',
             '{{ state_variables }}',
             '{{ validation_rules }}',
+            '{{ validation_rules_block }}',
             '{{ mount_method }}',
             '{{ mount_method_import }}',
             '{{ modal_title }}',
@@ -124,6 +125,7 @@ class MakeVoltModalCommand extends Command
             $modalMethods,
             $stateVariables,
             $validationRules,
+            !empty($validationRules) ? "rules([\n{$validationRules}\n]);" : '',
             $mountMethod,
             !empty($mountMethod) ? ', mount' : '',
             $this->getModalTitle($model, $type),
@@ -258,7 +260,7 @@ class MakeVoltModalCommand extends Command
             in_array($columnType, ['date']) => 'date',
             in_array($columnType, ['datetime', 'timestamp']) => 'datetime-local',
             in_array($columnType, ['time']) => 'time',
-            in_array($columnType, ['boolean']) => 'checkbox',
+            in_array($columnType, ['boolean', 'tinyint']) && (str_contains($column, 'is_') || str_contains($column, 'has_') || in_array($column, ['active', 'enabled', 'published'])) => 'checkbox',
             default => 'text',
         };
     }
@@ -295,6 +297,12 @@ class MakeVoltModalCommand extends Command
                 </div>";
         }
 
+        // Add step attribute for decimal fields
+        $stepAttr = '';
+        if ($type === 'number' && (str_contains($field, 'price') || str_contains($field, 'amount') || str_contains($field, 'cost'))) {
+            $stepAttr = ' step="0.01"';
+        }
+
         return "                <div>
                     <label for=\"{$field}\" class=\"block text-sm font-medium text-gray-700 mb-2\">{$label}</label>
                     <input 
@@ -302,7 +310,7 @@ class MakeVoltModalCommand extends Command
                         type=\"{$type}\"
                         id=\"{$field}\"
                         class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500\"
-                        placeholder=\"Enter {$label}\"
+                        placeholder=\"Enter {$label}\"{$stepAttr}
                     >
                     @error('{$field}') <span class=\"text-red-500 text-xs mt-1\">{{ \$message }}</span> @enderror
                 </div>";
@@ -465,21 +473,23 @@ class MakeVoltModalCommand extends Command
         return implode('|', $rules);
     }
 
-    protected function generateMountMethod(string $type): string
+    protected function generateMountMethod(string $type, string $modelClass = null): string
     {
+        $modelClassShort = $modelClass ? class_basename($modelClass) : '{model_class}';
+        
         return match ($type) {
-            'crud' => 'mount(function ({model_class} $model = null) {
-    $this->model = $model;
-    if ($model) {
-        $this->form = $model->toArray();
+            'crud' => "mount(function ({$modelClassShort} \$model = null) {
+    \$this->model = \$model;
+    if (\$model) {
+        \$this->form = \$model->toArray();
     }
-});',
-            'confirm', 'view' => 'mount(function ({model_class} $model) {
-    $this->model = $model;
-});',
-            'custom' => 'mount(function ({model_class} $model = null) {
-    $this->model = $model;
-});',
+});",
+            'confirm', 'view' => "mount(function ({$modelClassShort} \$model) {
+    \$this->model = \$model;
+});",
+            'custom' => "mount(function ({$modelClassShort} \$model = null) {
+    \$this->model = \$model;
+});",
             default => '',
         };
     }
@@ -489,11 +499,11 @@ class MakeVoltModalCommand extends Command
         $modelName = $this->getModelDisplayName($model);
         
         return match ($type) {
-            'crud' => "\$model ? 'Edit {$modelName}' : 'Create {$modelName}'",
-            'confirm' => "'Delete {$modelName}'",
-            'view' => "'View {$modelName}'",
-            'custom' => "'{$modelName} Modal'",
-            default => "'{$modelName} Modal'",
+            'crud' => "{{ \$model ? 'Edit {$modelName}' : 'Create {$modelName}' }}",
+            'confirm' => "Delete {$modelName}",
+            'view' => "View {$modelName}",
+            'custom' => "{$modelName} Modal",
+            default => "{$modelName} Modal",
         };
     }
 
